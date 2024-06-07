@@ -134,7 +134,7 @@
     <ClInclude Include="Shaders.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CubeFragment.Frag" />
+    <None Include="CombinedFragment.Frag" />
     <None Include="PyramidFragment.Frag" />
     <None Include="Vertex1.vert" />
   </ItemGroup>

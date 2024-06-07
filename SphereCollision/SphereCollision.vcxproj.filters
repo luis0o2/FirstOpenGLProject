@@ -28,7 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Vertex1.vert" />
-    <None Include="CubeFragment.Frag" />
+    <None Include="CombinedFragment.Frag" />
     <None Include="PyramidFragment.Frag" />
   </ItemGroup>
 </Project>

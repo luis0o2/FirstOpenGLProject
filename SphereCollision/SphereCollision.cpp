@@ -57,8 +57,7 @@ int main() {
 	glfwSetScrollCallback(window, scroll_callback);
 	
 
-	Shader cubeShader("Vertex1.vert", "CubeFragment.Frag");
-    Shader pyramidShader("Vertex1.vert", "PyramidFragment.Frag");
+    Shader shaderProgram("Vertex1.vert", "CombinedFragment.frag");
 
     // Set up vertex data (and buffer(s)) and configure vertex attributes for the square
     float cubeVertices[] = {
@@ -198,11 +197,9 @@ int main() {
     stbi_image_free(data2);
 
 
-    cubeShader.use();
-    cubeShader.setInt("texture1", 0);
-
-    pyramidShader.use();
-    pyramidShader.setInt("texture2", 0);
+    shaderProgram.use();
+    shaderProgram.setInt("texture1", 0);
+    shaderProgram.setInt("texture2", 1);
 
     /*glm::vec3 cubePositions[] = {
        glm::vec3(-3.0f, 0.5f, 0.0f),
@@ -225,19 +222,22 @@ int main() {
         // Render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         // Bind textures on corresponding texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
 
-        // Activate shader
-        cubeShader.use();
-        // Create transformations
-        glm::mat4 viewCube = camera.GetViewMatrix();
-        cubeShader.setMat4("view", viewCube);
-        glm::mat4 projectionCube = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-        cubeShader.setMat4("projection", projectionCube);
-        // Draw square
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+
+        shaderProgram.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+        shaderProgram.setMat4("view", view);
+        shaderProgram.setMat4("projection", projection);
 
         float radius = 3.0f;
         float angularSpeed = 2.0f;
@@ -246,35 +246,32 @@ int main() {
         float zOffsetC = radius * sin(angularSpeed * time);
 
 
+
         glBindVertexArray(cubeVAO);
         for (int i = 0; i < 8; i++) {
             float angle = glm::radians(i * 45.0f + 25.0f); // Angle offset for 8 cubes 
             float xOffset = radius * cos(angularSpeed * time + angle);
             float zOffset = radius * sin(angularSpeed * time + angle);
 
-            glm::mat4 modelCube = glm::mat4(1.0f);
-            modelCube = glm::translate(modelCube, glm::vec3(xOffset, 0.0f, zOffset));
-            modelCube = glm::rotate(modelCube, angle, glm::vec3(0.0f, 1.0f, 0.0f)); // Rotate each cube around the pyramid
-            cubeShader.setMat4("model", modelCube);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(xOffset, 0.0f, zOffset));
+            model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f)); // Rotate each cube around the pyramid
+            shaderProgram.setMat4("model", model);
+            shaderProgram.setInt("objectType", 0);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-        // Activate shader
-        pyramidShader.use();
-        // Create transformations
-        glm::mat4 viewPyramid = camera.GetViewMatrix();
-        pyramidShader.setMat4("view", viewPyramid);
-        glm::mat4 projectionPyramid = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-        pyramidShader.setMat4("projection", projectionPyramid);
+
+     
 
         // Draw pyramid
-        glm::mat4 modelPyramid = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);
         float yOffsetP = sin(glfwGetTime()) * 2.0f;
-        modelPyramid = glm::translate(modelPyramid, glm::vec3(0.0f, yOffsetP, 0.0f));
-        modelPyramid = glm::rotate(modelPyramid, (float)glfwGetTime() * 2, glm::vec3(0.0f, 1.0f, 0.0f));
-        pyramidShader.setMat4("model", modelPyramid);
+        model = glm::translate(model, glm::vec3(0.0f, yOffsetP, 0.0f));
+        model = glm::rotate(model, (float)glfwGetTime() * 2, glm::vec3(0.0f, 1.0f, 0.0f));
+        shaderProgram.setMat4("model", model);
+        shaderProgram.setInt("objectType", 1);
+
 
         glBindVertexArray(pyramidVAO);
         glDrawArrays(GL_TRIANGLES, 0, 18);
